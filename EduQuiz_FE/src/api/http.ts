@@ -103,8 +103,8 @@ async function apiRequest(url: string, options: ApiRequestOptions = {}) {
   });
 
   if (!response.ok) {
-    const data = await response.json().catch(() => ({ error: "Loi khong xac dinh" }));
-    throw new Error(data.error || `HTTP ${response.status}`);
+    const data = await response.json().catch(() => null);
+    throw new Error((data && data.error) || `HTTP ${response.status}`);
   }
 
   return response;
