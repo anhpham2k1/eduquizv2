@@ -1,0 +1,30 @@
+services:
+  frontend:
+    build:
+      context: ./EduQuiz_FE
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./EduQuiz_BE
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DATA_DIR: /app/data
+      JWT_SECRET: ${JWT_SECRET}
+      FRONTEND_URL: ${FRONTEND_URL:-http://107.174.35.107:3000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://107.174.35.107:3000,http://localhost:3000}
+      AUTH_MIGRATION_PASSWORD: ${AUTH_MIGRATION_PASSWORD:-12345678}
+    volumes:
+      - backend_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  backend_data:
