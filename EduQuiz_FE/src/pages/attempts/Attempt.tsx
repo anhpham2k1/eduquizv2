@@ -484,15 +484,20 @@ export default function Attempt() {
         if (isRetryWrong) {
           const wrongQuestionIds = finalQuestions
             .filter((question) => {
-              const answer = data.attempt.answers[question.id];
-              return Boolean(answer && question.correctKey && answer !== question.correctKey);
+              const answer = data.attempt.answers?.[question.id];
+              // Bao gồm cả câu trả lời sai và câu bị bỏ qua
+              return !answer || (question.correctKey && answer !== question.correctKey);
             })
             .map((question) => question.id);
+
+          const newAttemptId = typeof crypto !== "undefined" && crypto.randomUUID 
+            ? crypto.randomUUID() 
+            : `retry-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 
           dispatch({
             type: "INIT_RETRY",
             payload: {
-              attemptId: crypto.randomUUID(),
+              attemptId: newAttemptId,
               examId: data.exam.id,
               wrongQuestionIds: shouldShuffleQuestions ? shuffleArray(wrongQuestionIds) : wrongQuestionIds,
               correctMap,
