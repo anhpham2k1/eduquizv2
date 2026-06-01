@@ -21,6 +21,7 @@ export interface Exam {
   ownerId: string;
   shuffleQuestions?: boolean;
   shuffleAnswers?: boolean;
+  bestScore?: number;
 }
 
 export interface Choice {
@@ -56,4 +57,6 @@ export interface Attempt {
   bookmarks?: string[];
   config?: AttemptConfig;
   examTitle?: string;
+  correctCount?: number;
+  totalQuestions?: number;
 }

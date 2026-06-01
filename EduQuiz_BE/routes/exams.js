@@ -61,10 +61,23 @@ const createExamTransaction = db.transaction(({ examId, title, description, owne
 router.get('/', authMiddleware, (req, res) => {
   try {
     const exams = db.prepare(`
-      SELECT * FROM exams
-      WHERE owner_id = ?
-      ORDER BY created_at DESC
-    `).all(req.user.id);
+      SELECT e.*,
+        (
+          SELECT MAX(
+            (
+              SELECT COUNT(*)
+              FROM answers ans
+              JOIN questions q ON ans.question_id = q.id
+              WHERE ans.attempt_id = a.id AND ans.choice_key = q.correct_key
+            )
+          )
+          FROM attempts a
+          WHERE a.exam_id = e.id AND a.user_id = ? AND a.finished_at IS NOT NULL
+        ) AS best_correct_count
+      FROM exams e
+      WHERE e.owner_id = ?
+      ORDER BY e.created_at DESC
+    `).all(req.user.id, req.user.id);
 
     res.json(exams.map(formatExam));
   } catch (err) {
@@ -256,6 +269,7 @@ function formatExam(row) {
     ownerId: row.owner_id,
     shuffleQuestions: !!row.shuffle_questions,
     shuffleAnswers: !!row.shuffle_answers,
+    bestScore: row.best_correct_count != null ? row.best_correct_count : undefined,
   };
 }
 

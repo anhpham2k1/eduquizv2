@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Clock, Eye, FileText, Play, Plus, Trash2 } from "lucide-react";
+import { CheckCircle, Clock, Eye, FileText, Play, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "../api/client";
 import { Button } from "../components/ui/button";
@@ -105,6 +105,12 @@ export default function Dashboard() {
                       <span className="flex items-center">
                         <Clock className="mr-1 h-3 w-3" /> {new Date(exam.createdAt).toLocaleDateString("vi-VN")}
                       </span>
+                      {exam.bestScore != null && (
+                        <span className={`flex items-center ${exam.bestScore === exam.questionCount && exam.questionCount > 0 ? "text-green-600 font-medium" : ""}`}>
+                          {exam.bestScore === exam.questionCount && exam.questionCount > 0 && <CheckCircle className="mr-1 h-3 w-3 text-green-600" />}
+                          Tốt nhất: {exam.bestScore}/{exam.questionCount}
+                        </span>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1" />
@@ -162,6 +168,7 @@ export default function Dashboard() {
                       {attempt.finishedAt
                         ? ` • Thời gian: ${Math.floor(attempt.durationSec / 60)}p ${attempt.durationSec % 60}s`
                         : " • Chưa nộp bài"}
+                      {attempt.totalQuestions != null && attempt.finishedAt ? ` • Điểm: ${attempt.correctCount}/${attempt.totalQuestions}` : ""}
                     </CardDescription>
                   </div>
                   <div className="mt-4 flex gap-2 sm:mt-0">

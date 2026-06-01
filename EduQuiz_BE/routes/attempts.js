@@ -8,7 +8,16 @@ const router = express.Router();
 router.get('/', authMiddleware, (req, res) => {
   try {
     const attempts = db.prepare(`
-      SELECT a.*, e.title AS exam_title
+      SELECT 
+        a.*, 
+        e.title AS exam_title,
+        e.question_count AS total_questions,
+        (
+          SELECT COUNT(*)
+          FROM answers ans
+          JOIN questions q ON ans.question_id = q.id
+          WHERE ans.attempt_id = a.id AND ans.choice_key = q.correct_key
+        ) AS correct_count
       FROM attempts a
       JOIN exams e ON a.exam_id = e.id
       WHERE a.user_id = ?
@@ -250,6 +259,8 @@ function formatAttempt(row) {
     bookmarks: parseJson(row.bookmarks_json, []),
     config: parseJson(row.config_json, undefined),
     examTitle: row.exam_title || undefined,
+    correctCount: row.correct_count,
+    totalQuestions: row.total_questions,
   };
 }
 
