@@ -602,16 +602,25 @@ export default function Attempt() {
         dispatch({ type: "PREV" });
       }
 
-      if (["1", "2", "3", "4"].includes(event.key)) {
-        const keys: ChoiceKey[] = ["A", "B", "C", "D"];
-        const index = Number.parseInt(event.key, 10) - 1;
-        handleSelect(keys[index]);
+      if (["1", "2", "3", "4", "5", "6"].includes(event.key)) {
+        const activeQuestionId = state.activeQuestionIds?.[state.activeIndex];
+        const currentQuestion = activeQuestionId
+          ? questions.find((q) => q.id === activeQuestionId)
+          : null;
+
+        if (currentQuestion) {
+          const keys: ChoiceKey[] = ["A", "B", "C", "D", "E", "F"];
+          const index = Number.parseInt(event.key, 10) - 1;
+          if (index < currentQuestion.choices.length) {
+            handleSelect(keys[index]);
+          }
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handleSelect]);
+  }, [handleSelect, state.activeQuestionIds, state.activeIndex, questions]);
 
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center">Đang tải...</div>;

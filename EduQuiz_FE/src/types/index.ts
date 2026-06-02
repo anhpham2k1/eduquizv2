@@ -25,7 +25,7 @@ export interface Exam {
 }
 
 export interface Choice {
-  key: "A" | "B" | "C" | "D";
+  key: "A" | "B" | "C" | "D" | "E" | "F";
   text: string;
 }
 
@@ -35,7 +35,7 @@ export interface Question {
   content: string;
   imageUrl?: string;
   choices: Choice[];
-  correctKey?: "A" | "B" | "C" | "D";
+  correctKey?: "A" | "B" | "C" | "D" | "E" | "F";
   explanation?: string;
 }
 
@@ -53,7 +53,7 @@ export interface Attempt {
   startedAt: string;
   finishedAt?: string;
   durationSec: number;
-  answers: Record<string, "A" | "B" | "C" | "D">;
+  answers: Record<string, "A" | "B" | "C" | "D" | "E" | "F">;
   bookmarks?: string[];
   config?: AttemptConfig;
   examTitle?: string;

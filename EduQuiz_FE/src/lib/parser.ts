@@ -14,12 +14,12 @@ export const parseQuizText = (text: string): Question[] => {
   // Regex nhận diện bắt đầu câu hỏi: "Câu 1.", "Câu hỏi 1.", hoặc chỉ "1." ở đầu dòng
   const questionStartRegex = /^(?:(?:Câu\s+hỏi|Câu)\s*\d+|\d+)[\s.:\)-]/i;
   // Regex nhận diện bắt đầu đáp án: "A.", "B.", "*A.", "*C."
-  const optionStartRegex = /^(\*?\s*[A-D])[\s.:\)-]/i;
+  const optionStartRegex = /^(\*?\s*[A-F])[\s.:\)-]/i;
 
   const lines = cleanedText.split('\n');
   const questions: Question[] = [];
   let currentQuestion: Partial<Question> | null = null;
-  let currentOptions: { key: "A"|"B"|"C"|"D"; text: string; isCorrect: boolean }[] = [];
+  let currentOptions: { key: "A"|"B"|"C"|"D"|"E"|"F"; text: string; isCorrect: boolean }[] = [];
   let currentParsingTarget: 'question' | 'option' | null = null;
 
   lines.forEach((line) => {
@@ -38,10 +38,10 @@ export const parseQuizText = (text: string): Question[] => {
       currentParsingTarget = 'question';
     } 
     else if (optionStartRegex.test(line)) {
-      const match = line.match(/^(\*?)\s*([A-D])[\s.:\)-]\s*(.*)/i);
+      const match = line.match(/^(\*?)\s*([A-F])[\s.:\)-]\s*(.*)/i);
       if (match) {
         const isCorrect = match[1] === '*';
-        const key = match[2].toUpperCase() as "A"|"B"|"C"|"D";
+        const key = match[2].toUpperCase() as "A"|"B"|"C"|"D"|"E"|"F";
         const text = match[3].trim();
         currentOptions.push({ key, text, isCorrect });
         currentParsingTarget = 'option';
@@ -68,7 +68,7 @@ export const parseQuizText = (text: string): Question[] => {
 // Hàm chuẩn hóa câu hỏi cuối cùng
 const finalizeQuestion = (
   q: Partial<Question>, 
-  opts: { key: "A"|"B"|"C"|"D"; text: string; isCorrect: boolean }[], 
+  opts: { key: "A"|"B"|"C"|"D"|"E"|"F"; text: string; isCorrect: boolean }[], 
   no: number
 ): Question => {
   const correctOpt = opts.find(o => o.isCorrect) || opts[0];

@@ -66,7 +66,7 @@ export const apiClient = {
     });
   },
 
-  saveAnswer(attemptId: string, questionId: string, choiceKey: "A" | "B" | "C" | "D") {
+  saveAnswer(attemptId: string, questionId: string, choiceKey: "A" | "B" | "C" | "D" | "E" | "F") {
     return apiNoContent(`/api/attempts/${attemptId}/answer`, {
       method: "PUT",
       body: { questionId, choiceKey },

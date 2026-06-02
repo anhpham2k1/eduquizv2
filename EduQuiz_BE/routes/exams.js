@@ -6,7 +6,7 @@ const { authMiddleware } = require('../middleware/auth');
 const { processDocumentBuffer } = require('../lib/parser');
 
 const router = express.Router();
-const VALID_CHOICE_KEYS = ['A', 'B', 'C', 'D'];
+const VALID_CHOICE_KEYS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 const upload = multer({
   storage: multer.memoryStorage(),

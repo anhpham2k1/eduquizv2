@@ -10,7 +10,7 @@ function parseQuizText(text) {
     .join('\n');
 
   const questionStartRegex = /^(?:(?:Câu\s+hỏi|Câu)\s*\d+|\d+)[\s.:\)\-]/i;
-  const optionStartRegex = /^(\*?\s*[A-D])[\s.:\)\-]/i;
+  const optionStartRegex = /^(\*?\s*[A-F])[\s.:\)\-]/i;
 
   const lines = cleanedText.split('\n');
   const questions = [];
@@ -34,7 +34,7 @@ function parseQuizText(text) {
     }
 
     if (optionStartRegex.test(line)) {
-      const match = line.match(/^(\*?)\s*([A-D])[\s.:\)\-]\s*(.*)/i);
+      const match = line.match(/^(\*?)\s*([A-F])[\s.:\)\-]\s*(.*)/i);
       if (match) {
         currentOptions.push({
           key: match[2].toUpperCase(),

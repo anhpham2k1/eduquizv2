@@ -1,6 +1,6 @@
 export type Mode = "exam" | "review" | "retryWrong";
 
-export type ChoiceKey = "A" | "B" | "C" | "D";
+export type ChoiceKey = "A" | "B" | "C" | "D" | "E" | "F";
 
 export type AnswerState = {
   selectedKey?: ChoiceKey;
