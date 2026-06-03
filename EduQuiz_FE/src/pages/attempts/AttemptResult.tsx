@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
@@ -21,7 +21,14 @@ import { cn } from "../../lib/utils";
 export default function AttemptResult() {
   const { attemptId } = useParams<{ attemptId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const [filter, setFilter] = useState<"ALL" | "CORRECT" | "WRONG" | "SKIPPED" | "BOOKMARKED">("ALL");
+
+  const retryResult = location.state?.retryResult as { 
+    answers: Record<string, { selectedKey?: string, isCorrect?: boolean }>, 
+    activeQuestionIds: string[] 
+  } | undefined;
+  const isRetryView = Boolean(retryResult);
 
   const resultQuery = useQuery({
     queryKey: ["attempt-result", attemptId],
@@ -42,25 +49,63 @@ export default function AttemptResult() {
   }
 
   const { attempt, exam, questions } = resultQuery.data;
-  const totalQuestions = questions.length || 1;
 
-  const correctCount = questions.filter((question) => attempt.answers[question.id] === question.correctKey).length;
-  const skippedCount = questions.filter((question) => !attempt.answers[question.id]).length;
-  const wrongCount = questions.length - correctCount - skippedCount;
+  let correctCount = 0;
+  let skippedCount = 0;
+  let wrongCount = 0;
+  let totalQuestions = 1;
+  let filteredQuestions = [];
+
+  // Determine which answers to use (original vs retry session)
+  const getAnswerForQuestion = (questionId: string) => {
+    if (isRetryView && retryResult) {
+      return retryResult.answers[questionId]?.selectedKey;
+    }
+    return attempt.answers[questionId];
+  };
+
+  if (isRetryView && retryResult) {
+    const activeQuestions = questions.filter(q => retryResult.activeQuestionIds.includes(q.id));
+    totalQuestions = activeQuestions.length || 1;
+
+    correctCount = activeQuestions.filter(q => getAnswerForQuestion(q.id) === q.correctKey).length;
+    skippedCount = activeQuestions.filter(q => !getAnswerForQuestion(q.id)).length;
+    wrongCount = activeQuestions.length - correctCount - skippedCount;
+
+    filteredQuestions = activeQuestions.filter(q => {
+      const answer = getAnswerForQuestion(q.id);
+      const isCorrect = answer === q.correctKey;
+      const isSkipped = !answer;
+      const isBookmarked = attempt.bookmarks?.includes(q.id);
+
+      if (filter === "CORRECT") return isCorrect;
+      if (filter === "WRONG") return !isCorrect && !isSkipped;
+      if (filter === "SKIPPED") return isSkipped;
+      if (filter === "BOOKMARKED") return Boolean(isBookmarked);
+      return true;
+    });
+  } else {
+    totalQuestions = questions.length || 1;
+
+    correctCount = questions.filter((question) => attempt.answers[question.id] === question.correctKey).length;
+    skippedCount = questions.filter((question) => !attempt.answers[question.id]).length;
+    wrongCount = questions.length - correctCount - skippedCount;
+
+    filteredQuestions = questions.filter((question) => {
+      const answer = attempt.answers[question.id];
+      const isCorrect = answer === question.correctKey;
+      const isSkipped = !answer;
+      const isBookmarked = attempt.bookmarks?.includes(question.id);
+
+      if (filter === "CORRECT") return isCorrect;
+      if (filter === "WRONG") return !isCorrect && !isSkipped;
+      if (filter === "SKIPPED") return isSkipped;
+      if (filter === "BOOKMARKED") return Boolean(isBookmarked);
+      return true;
+    });
+  }
+
   const score = Math.round((correctCount / totalQuestions) * 10);
-
-  const filteredQuestions = questions.filter((question) => {
-    const answer = attempt.answers[question.id];
-    const isCorrect = answer === question.correctKey;
-    const isSkipped = !answer;
-    const isBookmarked = attempt.bookmarks?.includes(question.id);
-
-    if (filter === "CORRECT") return isCorrect;
-    if (filter === "WRONG") return !isCorrect && !isSkipped;
-    if (filter === "SKIPPED") return isSkipped;
-    if (filter === "BOOKMARKED") return Boolean(isBookmarked);
-    return true;
-  });
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -73,7 +118,9 @@ export default function AttemptResult() {
       <Card className="mb-8 overflow-hidden border-none shadow-lg">
         <div className="border-b bg-gradient-to-r from-primary/20 via-primary/10 to-transparent p-8 text-center">
           <Trophy className="mx-auto mb-4 h-16 w-16 text-primary" />
-          <h1 className="mb-2 text-3xl font-bold">Kết quả làm bài</h1>
+          <h1 className="mb-2 text-3xl font-bold">
+            {isRetryView ? "Kết quả làm lại câu sai" : "Kết quả làm bài"}
+          </h1>
           <p className="text-lg text-muted-foreground">{exam.title}</p>
         </div>
 
@@ -106,32 +153,78 @@ export default function AttemptResult() {
             </div>
           </div>
 
-          <div className="flex items-center justify-center gap-2 rounded-lg bg-secondary/50 py-3 text-muted-foreground">
-            <Clock className="h-5 w-5" />
-            <span>
-              Thời gian làm bài: <strong className="text-foreground">{formatTime(attempt.durationSec)}</strong>
-            </span>
-          </div>
+          {!isRetryView && (
+            <div className="flex items-center justify-center gap-2 rounded-lg bg-secondary/50 py-3 text-muted-foreground">
+              <Clock className="h-5 w-5" />
+              <span>
+                Thời gian làm bài: <strong className="text-foreground">{formatTime(attempt.durationSec)}</strong>
+              </span>
+            </div>
+          )}
         </CardContent>
 
-        <CardFooter className="flex flex-col justify-center gap-4 border-t bg-muted/10 p-6 sm:flex-row">
-          <Button variant="outline" size="lg" className="w-full sm:w-auto" onClick={() => navigate(`/exams/${exam.id}`)}>
-            <RotateCcw className="mr-2 h-5 w-5" /> Làm lại từ đầu
-          </Button>
-          {wrongCount > 0 ? (
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto"
-              onClick={() =>
-                navigate(`/attempts/${attempt.id}`, { state: { retryWrong: true, showAnswer: true } })
-              }
-            >
-              <AlertCircle className="mr-2 h-5 w-5" /> Làm lại câu sai
-            </Button>
-          ) : null}
+        <CardFooter className="flex flex-col justify-center gap-4 border-t bg-muted/10 p-6 sm:flex-row flex-wrap">
+          {!isRetryView ? (
+            <>
+              <Button variant="outline" size="lg" className="w-full sm:w-auto" onClick={() => navigate(`/exams/${exam.id}`)}>
+                <RotateCcw className="mr-2 h-5 w-5" /> Làm lại từ đầu
+              </Button>
+              {wrongCount > 0 ? (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full sm:w-auto"
+                  onClick={() =>
+                    navigate(`/attempts/${attempt.id}`, { state: { retryWrong: true, showAnswer: true } })
+                  }
+                >
+                  <AlertCircle className="mr-2 h-5 w-5" /> Làm lại câu sai
+                </Button>
+              ) : null}
+            </>
+          ) : (
+            <>
+              {wrongCount > 0 ? (
+                <Button
+                  variant="default"
+                  size="lg"
+                  className="w-full sm:w-auto"
+                  onClick={() =>
+                    // Truyền thêm cờ để Attempt.tsx có thể nhận biết nên lấy các câu sai từ đợt này hay đợt trước
+                    // Nhưng thực tế "Làm lại câu sai" luôn lấy từ data.attempt.answers trừ khi ta override nó.
+                    // Để đơn giản, ta có thể cho phép retry tiếp đợt sai mới bằng cách update Attempt.tsx, 
+                    // nhưng hiện tại ta có thể lưu đợt sai này vào state để truyền đi.
+                    navigate(`/attempts/${attempt.id}`, { 
+                      state: { retryWrong: true, showAnswer: true, currentWrongIds: filteredQuestions.filter(q => getAnswerForQuestion(q.id) !== q.correctKey).map(q => q.id) } 
+                    })
+                  }
+                >
+                  <AlertCircle className="mr-2 h-5 w-5" /> Làm lại các câu sai đợt này
+                </Button>
+              ) : null}
+              <Button
+                variant="outline"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={() =>
+                  navigate(`/attempts/${attempt.id}`, { state: { retryWrong: true, showAnswer: true } })
+                }
+              >
+                <RotateCcw className="mr-2 h-5 w-5" /> Làm lại toàn bộ câu sai lúc trước
+              </Button>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="w-full sm:w-auto" 
+                onClick={() => navigate(`/attempts/${attempt.id}/result`, { replace: true })}
+              >
+                <Eye className="mr-2 h-5 w-5" /> Xem kết quả gốc
+              </Button>
+            </>
+          )}
+          
           <Button size="lg" className="w-full sm:w-auto" onClick={() => navigate("/dashboard")}>
-            <Eye className="mr-2 h-5 w-5" /> Về Dashboard
+            Về Dashboard
           </Button>
         </CardFooter>
       </Card>
@@ -180,7 +273,7 @@ export default function AttemptResult() {
 
         <div className="space-y-4">
           {filteredQuestions.map((question) => {
-            const answer = attempt.answers[question.id];
+            const answer = getAnswerForQuestion(question.id);
             const isCorrect = answer === question.correctKey;
             const isSkipped = !answer;
             const isBookmarked = attempt.bookmarks?.includes(question.id);

@@ -7,6 +7,15 @@ export const parseQuizText = (text: string): Question[] => {
     .replace(/\xa0/g, ' ') // Xử lý non-breaking space từ Word
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n')
+    // Chuẩn hóa các ký tự Cyrillic giống Latin (A, B, C, E) thường bị nhầm khi copy/paste
+    .replace(/А/g, 'A')
+    .replace(/В/g, 'B')
+    .replace(/С/g, 'C')
+    .replace(/Е/g, 'E')
+    .replace(/а/g, 'a')
+    .replace(/в/g, 'b')
+    .replace(/с/g, 'c')
+    .replace(/е/g, 'e')
     .split('\n')
     .map(line => line.trim())
     .join('\n');

@@ -397,7 +397,14 @@ export default function Attempt() {
       localStorage.removeItem(`eduquiz_attempt_${attemptId}`);
 
       if (state.mode === "retryWrong") {
-        navigate(`/attempts/${attemptId}/result`);
+        navigate(`/attempts/${attemptId}/result`, {
+          state: {
+            retryResult: {
+              answers: state.answers,
+              activeQuestionIds: state.activeQuestionIds,
+            }
+          }
+        });
         return;
       }
 
@@ -482,7 +489,7 @@ export default function Attempt() {
         setQuestions(finalQuestions);
 
         if (isRetryWrong) {
-          const wrongQuestionIds = finalQuestions
+          const wrongQuestionIds = location.state?.currentWrongIds || finalQuestions
             .filter((question) => {
               const answer = data.attempt.answers?.[question.id];
               // Bao gồm cả câu trả lời sai và câu bị bỏ qua
