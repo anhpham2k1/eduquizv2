@@ -17,6 +17,7 @@ export interface Exam {
   title: string;
   description?: string;
   questionCount: number;
+  durationMin: number;
   createdAt: string;
   ownerId: string;
   shuffleQuestions?: boolean;

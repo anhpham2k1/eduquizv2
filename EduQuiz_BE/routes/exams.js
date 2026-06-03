@@ -24,8 +24,8 @@ const upload = multer({
 });
 
 const insertExamStatement = db.prepare(`
-  INSERT INTO exams (id, title, description, question_count, created_at, owner_id)
-  VALUES (?, ?, ?, ?, ?, ?)
+  INSERT INTO exams (id, title, description, question_count, created_at, owner_id, duration_min)
+  VALUES (?, ?, ?, ?, ?, ?, ?)
 `);
 
 const insertQuestionStatement = db.prepare(`
@@ -33,7 +33,7 @@ const insertQuestionStatement = db.prepare(`
   VALUES (?, ?, ?, ?, ?, ?, ?)
 `);
 
-const createExamTransaction = db.transaction(({ examId, title, description, ownerId, questions }) => {
+const createExamTransaction = db.transaction(({ examId, title, description, ownerId, durationMin, questions }) => {
   const createdAt = new Date().toISOString();
 
   insertExamStatement.run(
@@ -43,6 +43,7 @@ const createExamTransaction = db.transaction(({ examId, title, description, owne
     questions.length,
     createdAt,
     ownerId,
+    durationMin
   );
 
   questions.forEach((question, index) => {
@@ -108,6 +109,7 @@ router.post('/', authMiddleware, upload.single('file'), async (req, res) => {
   try {
     const title = sanitizeText(req.body.title);
     const description = sanitizeNullableText(req.body.description);
+    const durationMin = parseInt(req.body.durationMin, 10) || 60;
 
     if (!title) {
       return res.status(400).json({ error: 'Vui lòng nhập tiêu đề đề thi' });
@@ -131,6 +133,7 @@ router.post('/', authMiddleware, upload.single('file'), async (req, res) => {
       title,
       description,
       ownerId: req.user.id,
+      durationMin,
       questions,
     });
 
@@ -267,6 +270,7 @@ function formatExam(row) {
     questionCount: row.question_count,
     createdAt: row.created_at,
     ownerId: row.owner_id,
+    durationMin: row.duration_min,
     shuffleQuestions: !!row.shuffle_questions,
     shuffleAnswers: !!row.shuffle_answers,
     bestScore: row.best_correct_count != null ? row.best_correct_count : undefined,

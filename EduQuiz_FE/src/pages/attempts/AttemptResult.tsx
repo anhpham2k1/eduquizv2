@@ -208,7 +208,7 @@ export default function AttemptResult() {
                   navigate(`/attempts/${attempt.id}`, { state: { retryWrong: true, showAnswer: true } })
                 }
               >
-                <RotateCcw className="mr-2 h-5 w-5" /> Làm lại toàn bộ câu sai lúc trước
+                <RotateCcw className="mr-2 h-5 w-5" /> Làm lại tất cả câu sai của bài gốc
               </Button>
               <Button 
                 variant="outline" 

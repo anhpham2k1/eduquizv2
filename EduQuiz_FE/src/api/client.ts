@@ -43,6 +43,7 @@ export const apiClient = {
   createExam(data: {
     title: string;
     description?: string;
+    durationMin?: number;
     questions: Array<Partial<Question>>;
   }) {
     return apiJson<Exam>("/api/exams", {

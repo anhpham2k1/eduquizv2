@@ -9,6 +9,7 @@ import {
   List,
   Settings,
   XCircle,
+  Info,
 } from "lucide-react";
 import { apiClient } from "../../api/client";
 import type { Attempt as AttemptType, Exam, Question } from "../../types";
@@ -320,6 +321,17 @@ function QuestionCard({
             );
           })}
         </div>
+
+        {((showAnswer && currentAnswer?.locked) || isReview) && currentQuestion.explanation && (
+          <div className="mt-4 rounded-xl bg-blue-50/50 p-4 border border-blue-100 dark:bg-blue-900/10 dark:border-blue-900/30">
+            <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
+              <Info className="h-5 w-5" /> Giải thích
+            </h4>
+            <p className="text-blue-800 dark:text-blue-200 text-sm md:text-base leading-relaxed whitespace-pre-wrap">
+              {currentQuestion.explanation}
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -344,11 +356,11 @@ function MobileSheet({
         showCloseButton={false}
         className="inset-x-0 bottom-0 top-auto left-0 w-full max-w-none translate-x-0 translate-y-0 gap-0 rounded-b-none rounded-t-3xl border-x-0 border-b-0 p-0 sm:max-w-none"
       >
-        <div className="max-h-[82dvh] overflow-hidden">
-          <div className="flex justify-center pt-3">
+        <div className="max-h-[82dvh] flex flex-col overflow-hidden">
+          <div className="flex justify-center pt-3 shrink-0">
             <div className="h-1.5 w-14 rounded-full bg-muted-foreground/20" />
           </div>
-          <DialogHeader className="border-b px-4 pb-4 pt-3 text-left">
+          <DialogHeader className="border-b px-4 pb-4 pt-3 text-left shrink-0">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <DialogTitle>{title}</DialogTitle>
@@ -361,7 +373,7 @@ function MobileSheet({
               </DialogClose>
             </div>
           </DialogHeader>
-          <div className="overflow-y-auto px-4 py-4">{children}</div>
+          <div className="overflow-y-auto flex-1 px-4 py-4">{children}</div>
         </div>
       </DialogContent>
     </Dialog>
@@ -681,10 +693,12 @@ export default function Attempt() {
             </div>
 
             <div className="flex shrink-0 items-center gap-2">
-              <div className="flex items-center gap-2 rounded-full border bg-card px-3 py-2 shadow-sm">
-                <Clock className="h-4 w-4 text-muted-foreground" />
-                <Timer initialTime={3600} onTimeUp={handleSubmit} className="text-base" />
-              </div>
+              {state.mode === "exam" && (
+                <div className="flex items-center gap-2 rounded-full border bg-card px-3 py-2 shadow-sm">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <Timer initialTime={exam?.durationMin ? exam.durationMin * 60 : 3600} onTimeUp={handleSubmit} className="text-base" />
+                </div>
+              )}
               <Button
                 variant="outline"
                 size="icon"
@@ -794,7 +808,14 @@ export default function Attempt() {
                 <Clock className="mr-1 h-4 w-4" /> Thời gian còn lại
               </span>
             </div>
-            <Timer initialTime={3600} onTimeUp={handleSubmit} className="text-3xl" />
+            {state.mode === "exam" ? (
+              <Timer initialTime={exam?.durationMin ? exam.durationMin * 60 : 3600} onTimeUp={handleSubmit} className="text-3xl" />
+            ) : (
+              <div className="flex items-center gap-2 rounded-md bg-secondary/50 p-3 text-xs text-muted-foreground">
+                <Info className="h-4 w-4 shrink-0" />
+                <span>Chế độ ôn tập không giới hạn thời gian.</span>
+              </div>
+            )}
           </div>
 
           <div className="space-y-4 border-t pt-4">

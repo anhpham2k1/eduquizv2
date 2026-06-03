@@ -19,6 +19,7 @@ function isSupportedQuestionFile(file: File) {
 export default function ExamNew() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [durationMin, setDurationMin] = useState("60");
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [parsedQuestions, setParsedQuestions] = useState<Question[]>([]);
@@ -49,6 +50,7 @@ export default function ExamNew() {
       apiClient.createExam({
         title: title.trim(),
         description: description.trim() || undefined,
+        durationMin: parseInt(durationMin, 10) || 60,
         questions: parsedQuestions.map((question, index) => ({
           no: index + 1,
           content: question.content,
@@ -180,6 +182,20 @@ export default function ExamNew() {
                     placeholder="VD: Đề thi thử THPT Quốc gia môn Toán"
                     value={title}
                     onChange={(event) => setTitle(event.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="durationMin">
+                    Thời gian làm bài (phút) <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="durationMin"
+                    type="number"
+                    min="1"
+                    placeholder="VD: 60"
+                    value={durationMin}
+                    onChange={(event) => setDurationMin(event.target.value)}
                   />
                 </div>
 
