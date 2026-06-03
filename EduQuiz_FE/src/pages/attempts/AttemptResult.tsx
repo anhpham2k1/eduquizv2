@@ -189,15 +189,13 @@ export default function AttemptResult() {
                   variant="default"
                   size="lg"
                   className="w-full sm:w-auto"
-                  onClick={() =>
-                    // Truyền thêm cờ để Attempt.tsx có thể nhận biết nên lấy các câu sai từ đợt này hay đợt trước
-                    // Nhưng thực tế "Làm lại câu sai" luôn lấy từ data.attempt.answers trừ khi ta override nó.
-                    // Để đơn giản, ta có thể cho phép retry tiếp đợt sai mới bằng cách update Attempt.tsx, 
-                    // nhưng hiện tại ta có thể lưu đợt sai này vào state để truyền đi.
+                  onClick={() => {
+                    const activeQuestions = questions.filter(q => retryResult.activeQuestionIds.includes(q.id));
+                    const nextWrongIds = activeQuestions.filter(q => getAnswerForQuestion(q.id) !== q.correctKey).map(q => q.id);
                     navigate(`/attempts/${attempt.id}`, { 
-                      state: { retryWrong: true, showAnswer: true, currentWrongIds: filteredQuestions.filter(q => getAnswerForQuestion(q.id) !== q.correctKey).map(q => q.id) } 
-                    })
-                  }
+                      state: { retryWrong: true, showAnswer: true, currentWrongIds: nextWrongIds } 
+                    });
+                  }}
                 >
                   <AlertCircle className="mr-2 h-5 w-5" /> Làm lại các câu sai đợt này
                 </Button>

@@ -387,33 +387,39 @@ export default function Attempt() {
 
   const isRetryWrong = Boolean(location.state?.retryWrong);
   const [state, dispatch] = useReducer(attemptReducer, {} as AttemptState);
+  
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   const handleSubmit = useCallback(async () => {
-    if (!state.attemptId) {
+    const currentState = stateRef.current;
+    if (!currentState.attemptId) {
       return;
     }
 
     try {
       localStorage.removeItem(`eduquiz_attempt_${attemptId}`);
 
-      if (state.mode === "retryWrong") {
+      if (currentState.mode === "retryWrong") {
         navigate(`/attempts/${attemptId}/result`, {
           state: {
             retryResult: {
-              answers: state.answers,
-              activeQuestionIds: state.activeQuestionIds,
+              answers: currentState.answers,
+              activeQuestionIds: currentState.activeQuestionIds,
             }
           }
         });
         return;
       }
 
-      await apiClient.submitAttempt(state.attemptId, state.bookmarks);
-      navigate(`/attempts/${state.attemptId}/result`);
+      await apiClient.submitAttempt(currentState.attemptId, currentState.bookmarks);
+      navigate(`/attempts/${currentState.attemptId}/result`);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Không thể nộp bài");
     }
-  }, [attemptId, navigate, state.attemptId, state.bookmarks, state.mode]);
+  }, [attemptId, navigate]);
 
   useEffect(() => {
     if (!attemptId) {
